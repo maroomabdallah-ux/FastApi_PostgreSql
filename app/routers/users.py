@@ -8,6 +8,8 @@ from app.database import get_db
 from app.schemas import UserCreate, UserResponse, UserUpdate , PostResponse
 
 from app import crud
+from app.security import require_admin
+from app.models import User
 
 router = APIRouter(
     prefix="/users",
@@ -15,26 +17,20 @@ router = APIRouter(
 )
 
 
-@router.post(
-    "",
-    response_model=UserResponse
-)
-def create_user(
-    user: UserCreate,
-    db: Session = Depends(get_db)
-):
+
+
+@router.post("/", response_model=UserResponse)
+def create_user(user: UserCreate, db: Session = Depends(get_db)):
     return crud.create_user(db, user)
 
 
-@router.get(
-    "",
-    response_model=list[UserResponse]
-)
+
+@router.get("/", response_model=list[UserResponse])
 def get_users(
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: User = Depends(require_admin)
 ):
     return crud.get_all_users(db)
-
 
 @router.get(
     "/{user_id}",

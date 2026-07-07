@@ -4,6 +4,9 @@ from sqlalchemy.orm import Session
 from app.database import get_db
 from app.schemas import PostCreate, PostResponse
 from app import crud
+from app.security import get_current_user
+from app.models import User
+
 
 router = APIRouter(
     prefix="/posts",
@@ -17,7 +20,14 @@ def create_post(post: PostCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/", response_model=list[PostResponse])
-def get_posts(db: Session = Depends(get_db)):
+def get_posts(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    print(current_user.id)
+    print(current_user.email)
+    print(current_user.role)
+
     return crud.get_all_posts(db)
 
 
