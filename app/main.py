@@ -4,6 +4,8 @@ from app.database import Base
 from app.database import engine
 
 from app.routers import users
+from app.routers import posts
+
 
 Base.metadata.create_all(bind=engine)
 
@@ -12,11 +14,11 @@ app = FastAPI(
 )
 
 app.include_router(users.router)
+app.include_router(posts.router)
 
 
 @app.get("/")
 def home():
-
     return {
         "message": "FastAPI PostgreSQL"
     }

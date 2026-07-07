@@ -5,8 +5,7 @@ from fastapi import HTTPException
 from sqlalchemy.orm import Session
 
 from app.database import get_db
-from app.schemas import UserCreate
-from app.schemas import UserResponse
+from app.schemas import UserCreate, UserResponse, UserUpdate , PostResponse
 
 from app import crud
 
@@ -57,6 +56,15 @@ def get_user(
 
     return user
 
+@router.put("/{user_id}", response_model=UserResponse)
+def update_user(user_id: int, user: UserUpdate, db: Session = Depends(get_db)):
+    updated_user = crud.update_user(db, user_id, user)
+
+    if not updated_user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return updated_user
+
 
 @router.delete("/{user_id}")
 def delete_user(
@@ -76,3 +84,18 @@ def delete_user(
     return {
         "message": "Deleted Successfully"
     }
+
+
+
+@router.get("/{user_id}/posts", response_model=list[PostResponse])
+def get_user_posts(user_id: int, db: Session = Depends(get_db)):
+
+    user = crud.get_user(db, user_id)
+
+    if not user:
+        raise HTTPException(
+            status_code=404,
+            detail="User not found"
+        )
+
+    return crud.get_posts_by_user(db, user_id)
