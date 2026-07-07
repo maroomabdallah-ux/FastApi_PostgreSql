@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+
+<style>
+
+body{
+    font-family: Arial;
+    background:#f2f2f2;
+}
+
+.container{
+    width:1000px;
+    margin:auto;
+}
+
+table{
+
+    width:100%;
+    border-collapse:collapse;
+    margin-top:15px;
+    background:white;
+
+}
+
+table,th,td{
+
+    border:1px solid #ccc;
+
+}
+
+th,td{
+
+    padding:10px;
+    text-align:left;
+
+}
+
+.user{
+
+    background:white;
+    margin-top:20px;
+    padding:15px;
+    border:1px solid #ccc;
+
+}
+
+button{
+
+    padding:8px 15px;
+    cursor:pointer;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+<h1>Admin Dashboard</h1>
+
+<button onclick="logout()">Logout</button>
+
+<hr>
+
+<h2>Products In Store</h2>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>ID</th>
+
+<th>Name</th>
+
+<th>Price</th>
+
+<th>Stock</th>
+
+</tr>
+
+</thead>
+
+<tbody id="productsTable">
+
+</tbody>
+
+</table>
+
+<hr>
+
+<h2>Users</h2>
+
+<div id="users"></div>
+
+</div>
+
+<script>
+
+const API="http://127.0.0.1:8000";
+
+const token=localStorage.getItem("token");
+
+if(!token){
+
+    window.location="test-auth.html";
+
+}
+
+async function loadProducts(){
+
+    const response=await fetch(`${API}/products`,{
+
+        headers:{
+            "Authorization":"Bearer "+token
+        }
+
+    });
+
+    const products=await response.json();
+
+    const table=document.getElementById("productsTable");
+
+    table.innerHTML="";
+
+    products.forEach(product=>{
+
+        table.innerHTML+=`
+
+        <tr>
+
+        <td>${product.id}</td>
+
+        <td>${product.name}</td>
+
+        <td>$${product.price}</td>
+
+        <td>${product.stock_quantity}</td>
+
+        </tr>
+
+        `;
+
+    });
+
+}
+
+async function loadUsers(){
+
+    const response=await fetch(`${API}/users`,{
+
+        headers:{
+            "Authorization":"Bearer "+token
+        }
+
+    });
+
+    const users=await response.json();
+
+    const div=document.getElementById("users");
+
+    div.innerHTML="";
+
+    for(const user of users){
+
+        div.innerHTML+=`
+
+        <div class="user">
+
+        <h3>${user.name}</h3>
+
+        <div id="user-${user.id}">
+
+        Loading...
+
+        </div>
+
+        </div>
+
+        `;
+
+        loadUserProducts(user.id);
+
+    }
+
+}
+
+async function loadUserProducts(id){
+
+    const response=await fetch(`${API}/user-products/${id}`,{
+
+        headers:{
+            "Authorization":"Bearer "+token
+        }
+
+    });
+
+    const products=await response.json();
+
+    const div=document.getElementById(`user-${id}`);
+
+    div.innerHTML="";
+
+    if(products.length===0){
+
+        div.innerHTML="<p>No Products</p>";
+
+        return;
+
+    }
+
+    products.forEach(product=>{
+
+        div.innerHTML+=`
+
+        <p>
+
+        • ${product.name}
+
+        |
+
+        Quantity : ${product.quantity}
+
+        </p>
+
+        `;
+
+    });
+
+}
+
+function logout(){
+
+    localStorage.removeItem("token");
+
+    window.location="test-auth.html";
+
+}
+
+loadProducts();
+
+loadUsers();
+
+</script>
+
+</body>
+
+</html>

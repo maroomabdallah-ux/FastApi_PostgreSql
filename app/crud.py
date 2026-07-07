@@ -1,12 +1,16 @@
 from sqlalchemy.orm import Session
-
-from app.models import User, Post
-from app.schemas import UserCreate, UserUpdate, PostCreate, PostUpdate
-
+from app.security import hash_password
+from app.security import verify_password
+from app.models import User, Post, Product
+from app.schemas import UserCreate, UserUpdate, PostCreate, PostUpdate, ProductCreate
+from app.models import Product, UserProduct
+from app.schemas import ProductCreate, UserProductCreate
 def create_user(db: Session, user: UserCreate):
     db_user = User(
         name=user.name,
-        email=user.email
+        email=user.email,
+        password=hash_password(user.password),
+        role="USER"
     )
 
     db.add(db_user)
@@ -14,7 +18,6 @@ def create_user(db: Session, user: UserCreate):
     db.refresh(db_user)
 
     return db_user
-
 
 def get_all_users(db: Session):
     return db.query(User).all()
@@ -100,3 +103,68 @@ def get_posts_by_user(db: Session, user_id: int):
     return db.query(Post).filter(
         Post.user_id == user_id
     ).all()
+
+######################################
+def get_user_by_email(db: Session, email: str):
+    return db.query(User).filter(
+        User.email == email
+    ).first()
+######################################
+def authenticate_user(db: Session, email: str, password: str):
+
+    user = get_user_by_email(db, email)
+
+    if not user:
+        return None
+
+    if not verify_password(password, user.password):
+        return None
+
+    return user
+
+########################################
+def assign_product_to_user(
+    db: Session,
+    user_product: UserProductCreate
+):
+
+    assignment = UserProduct(
+        user_id=user_product.user_id,
+        product_id=user_product.product_id,
+        quantity=user_product.quantity
+    )
+
+    db.add(assignment)
+
+    db.commit()
+
+    db.refresh(assignment)
+
+    return assignment
+
+
+def get_user_products(db: Session, user_id: int):
+
+    assignments = db.query(UserProduct).filter(
+        UserProduct.user_id == user_id
+    ).all()
+
+    result = []
+
+    for item in assignments:
+
+        result.append({
+
+            "id": item.product.id,
+
+            "name": item.product.name,
+
+            "description": item.product.description,
+
+            "price": item.product.price,
+
+            "quantity": item.quantity
+
+        })
+
+    return result
