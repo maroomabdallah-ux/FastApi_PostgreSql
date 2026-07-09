@@ -86,6 +86,11 @@ class UserProductCreate(BaseModel):
     quantity: int
 
 
+class MyProductCreate(BaseModel):
+    product_id: int
+    quantity: int = 1
+
+
 class UserProductResponse(BaseModel):
     id: int
     user_id: int

@@ -7,12 +7,25 @@ from app import crud
 from app.security import create_access_token
 from app.security import get_current_user
 from app.models import User
-from app.schemas import Token, UserResponse
+from app.schemas import Token, UserCreate, UserResponse
 
 router = APIRouter(
     prefix="/auth",
     tags=["Authentication"]
 )
+
+
+@router.post("/register", response_model=UserResponse, status_code=201)
+def register(user: UserCreate, db: Session = Depends(get_db)):
+    db_user = crud.get_user_by_email(db, user.email)
+
+    if db_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
+
+    return crud.create_user(db, user)
 
 
 @router.post("/login", response_model=Token)
