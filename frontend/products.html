@@ -107,6 +107,16 @@
 
 const API_URL="http://127.0.0.1:8000";
 
+const hashParams=new URLSearchParams(window.location.hash.substring(1));
+const googleToken=hashParams.get("token");
+
+if(googleToken){
+
+    localStorage.setItem("token",googleToken);
+    window.history.replaceState(null,"",window.location.pathname + window.location.search);
+
+}
+
 const token=localStorage.getItem("token");
 
 if(!token){
@@ -226,6 +236,7 @@ async function addToMyProducts(productId){
     }
 
     showMessage(`${data.name} added to your products.`);
+    loadStoreProducts();
 
 }
 

@@ -7,3 +7,4 @@ pydantic[email]
 pyjwt
 pwdlib
 python-multipart
+certifi

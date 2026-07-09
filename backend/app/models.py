@@ -4,7 +4,7 @@ from decimal import Decimal
 from sqlalchemy import DateTime, ForeignKey, Numeric, String, Text
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
-from app.database import Base
+from .database import Base
 
 
 # ==========================
@@ -20,6 +20,11 @@ class User(Base):
     email: Mapped[str] = mapped_column(
         String(255),
         unique=True
+    )
+
+    google_id: Mapped[str | None] = mapped_column(
+        String,
+        nullable=True
     )
 
     password: Mapped[str] = mapped_column(String(255))
