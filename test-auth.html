@@ -37,6 +37,11 @@
             cursor:pointer;
         }
 
+        .google-button{
+            background:#ffffff;
+            border:1px solid #ccc;
+        }
+
         #result{
             margin-top:15px;
             color:red;
@@ -79,6 +84,10 @@
         Register
     </button>
 
+    <button class="google-button" onclick="loginWithGoogle()">
+        Login with Google
+    </button>
+
     <div id="result"></div>
 
 </div>
@@ -86,6 +95,13 @@
 <script>
 
 const API_URL="http://127.0.0.1:8000";
+
+
+function loginWithGoogle(){
+
+    window.location=`${API_URL}/auth/google/login`;
+
+}
 
 
 async function register(){

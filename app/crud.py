@@ -187,10 +187,20 @@ def add_product_to_user(
     product_id: int,
     quantity: int
 ):
+    product = get_product(db, product_id)
+
+    if not product:
+        return None
+
+    if product.stock_quantity < quantity:
+        return None
+
     assignment = db.query(UserProduct).filter(
         UserProduct.user_id == user_id,
         UserProduct.product_id == product_id
     ).first()
+
+    product.stock_quantity -= quantity
 
     if assignment:
         assignment.quantity += quantity
