@@ -9,6 +9,11 @@ class UserLogin(BaseModel):
     password: str
 
 
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+
+
 ############################### USER
 
 class UserCreate(BaseModel):
@@ -79,6 +84,11 @@ class UserProductCreate(BaseModel):
     user_id: int
     product_id: int
     quantity: int
+
+
+class MyProductCreate(BaseModel):
+    product_id: int
+    quantity: int = 1
 
 
 class UserProductResponse(BaseModel):

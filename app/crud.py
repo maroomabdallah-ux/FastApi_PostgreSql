@@ -1,9 +1,8 @@
 from sqlalchemy.orm import Session
 from app.security import hash_password
 from app.security import verify_password
-from app.models import User, Post, Product
-from app.schemas import UserCreate, UserUpdate, PostCreate, PostUpdate, ProductCreate
-from app.models import Product, UserProduct
+from app.models import User, Post, Product, UserProduct
+from app.schemas import UserCreate, UserUpdate, PostCreate, PostUpdate
 from app.schemas import ProductCreate, UserProductCreate
 def create_user(db: Session, user: UserCreate):
     db_user = User(
@@ -122,6 +121,45 @@ def authenticate_user(db: Session, email: str, password: str):
 
     return user
 
+
+########################################
+def create_product(db: Session, product: ProductCreate):
+    db_product = Product(
+        name=product.name,
+        description=product.description,
+        price=product.price,
+        stock_quantity=product.stock_quantity
+    )
+
+    db.add(db_product)
+    db.commit()
+    db.refresh(db_product)
+
+    return db_product
+
+
+def get_all_products(db: Session):
+    return db.query(Product).all()
+
+
+def get_product(db: Session, product_id: int):
+    return db.query(Product).filter(Product.id == product_id).first()
+
+
+def delete_product(db: Session, product_id: int):
+    product = get_product(db, product_id)
+
+    if product:
+        db.delete(product)
+        db.commit()
+
+    return product
+
+
+def get_my_products(db: Session, user_id: int):
+    return get_user_products(db, user_id)
+
+
 ########################################
 def assign_product_to_user(
     db: Session,
@@ -143,6 +181,43 @@ def assign_product_to_user(
     return assignment
 
 
+def add_product_to_user(
+    db: Session,
+    user_id: int,
+    product_id: int,
+    quantity: int
+):
+    assignment = db.query(UserProduct).filter(
+        UserProduct.user_id == user_id,
+        UserProduct.product_id == product_id
+    ).first()
+
+    if assignment:
+        assignment.quantity += quantity
+    else:
+        assignment = UserProduct(
+            user_id=user_id,
+            product_id=product_id,
+            quantity=quantity
+        )
+        db.add(assignment)
+
+    db.commit()
+    db.refresh(assignment)
+
+    return assignment
+
+
+def user_product_to_response(user_product: UserProduct):
+    return {
+        "id": user_product.product.id,
+        "name": user_product.product.name,
+        "description": user_product.product.description,
+        "price": user_product.product.price,
+        "quantity": user_product.quantity
+    }
+
+
 def get_user_products(db: Session, user_id: int):
 
     assignments = db.query(UserProduct).filter(
@@ -153,18 +228,6 @@ def get_user_products(db: Session, user_id: int):
 
     for item in assignments:
 
-        result.append({
-
-            "id": item.product.id,
-
-            "name": item.product.name,
-
-            "description": item.product.description,
-
-            "price": item.product.price,
-
-            "quantity": item.quantity
-
-        })
+        result.append(user_product_to_response(item))
 
     return result

@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>My Products</title>
+    <title>Products</title>
 
     <style>
 
@@ -12,7 +12,8 @@
         }
 
         .container{
-            width:800px;
+            width:1000px;
+            max-width:calc(100% - 30px);
             margin:auto;
         }
 
@@ -20,26 +21,48 @@
             display:flex;
             justify-content:space-between;
             align-items:center;
+            gap:15px;
+        }
+
+        .actions{
+            display:flex;
+            gap:10px;
+        }
+
+        .grid{
+            display:grid;
+            grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
+            gap:15px;
+            margin-top:15px;
         }
 
         .card{
-
             background:white;
-
             padding:15px;
-
-            margin-top:15px;
-
             border:1px solid #ccc;
+        }
 
+        .card h3{
+            margin-top:0;
+        }
+
+        .price{
+            font-weight:bold;
         }
 
         button{
-
             padding:10px;
-
             cursor:pointer;
+        }
 
+        .card button{
+            width:100%;
+            margin-top:10px;
+        }
+
+        #message{
+            margin-top:15px;
+            color:green;
         }
 
     </style>
@@ -52,19 +75,31 @@
 
     <div class="header">
 
-        <h2>My Products</h2>
+        <h2 id="pageTitle">Products</h2>
 
-        <button onclick="logout()">
-            Logout
-        </button>
+        <div class="actions">
+
+            <button onclick="loadStoreProducts()">
+                Store
+            </button>
+
+            <button onclick="loadMyProducts()">
+                My Products
+            </button>
+
+            <button onclick="logout()">
+                Logout
+            </button>
+
+        </div>
 
     </div>
 
     <hr>
 
-    <div id="products">
+    <div id="message"></div>
 
-    </div>
+    <div id="products" class="grid"></div>
 
 </div>
 
@@ -81,13 +116,36 @@ if(!token){
 }
 
 
-async function loadProducts(){
+function authHeaders(extraHeaders={}){
 
-    const response=await fetch(`${API_URL}/user-products/my`,{
+    return {
+        "Authorization":"Bearer "+token,
+        ...extraHeaders
+    };
 
-        headers:{
-            "Authorization":"Bearer "+token
-        }
+}
+
+
+function showMessage(message,color="green"){
+
+    const div=document.getElementById("message");
+
+    div.style.color=color;
+
+    div.innerHTML=message;
+
+}
+
+
+async function loadStoreProducts(){
+
+    document.getElementById("pageTitle").innerHTML="Store Products";
+
+    showMessage("");
+
+    const response=await fetch(`${API_URL}/products/store`,{
+
+        headers:authHeaders()
 
     });
 
@@ -97,36 +155,128 @@ async function loadProducts(){
 
     div.innerHTML="";
 
+    if(!response.ok){
+
+        showMessage(products.detail || "Could not load products","red");
+
+        return;
+
+    }
+
+    if(products.length===0){
+
+        div.innerHTML="<p>No products available.</p>";
+
+        return;
+
+    }
+
     products.forEach(product=>{
 
         div.innerHTML+=`
 
         <div class="card">
 
-<div class="card">
+            <h3>${product.name}</h3>
 
-    <h3>${product.name}</h3>
+            <p>${product.description}</p>
 
-    <p>${product.description}</p>
+            <p class="price">$${product.price}</p>
 
-    <p>
-        Price :
-        $${product.price}
-    </p>
+            <p>Stock: ${product.stock_quantity}</p>
 
-    <p>
-        Quantity :
-        ${product.quantity}
-    </p>
+            <button onclick="addToMyProducts(${product.id})">
+                Add
+            </button>
 
-</div>
-            <p>
+        </div>
 
-                Quantity :
+        `;
 
-                ${product.quantity}
+    });
 
-            </p>
+}
+
+
+async function addToMyProducts(productId){
+
+    const response=await fetch(`${API_URL}/user-products/my`,{
+
+        method:"POST",
+
+        headers:authHeaders({
+            "Content-Type":"application/json"
+        }),
+
+        body:JSON.stringify({
+            product_id:productId,
+            quantity:1
+        })
+
+    });
+
+    const data=await response.json();
+
+    if(!response.ok){
+
+        showMessage(data.detail || "Could not add product","red");
+
+        return;
+
+    }
+
+    showMessage(`${data.name} added to your products.`);
+
+}
+
+
+async function loadMyProducts(){
+
+    document.getElementById("pageTitle").innerHTML="My Products";
+
+    showMessage("");
+
+    const response=await fetch(`${API_URL}/user-products/my`,{
+
+        headers:authHeaders()
+
+    });
+
+    const products=await response.json();
+
+    const div=document.getElementById("products");
+
+    div.innerHTML="";
+
+    if(!response.ok){
+
+        showMessage(products.detail || "Could not load your products","red");
+
+        return;
+
+    }
+
+    if(products.length===0){
+
+        div.innerHTML="<p>You have not added products yet.</p>";
+
+        return;
+
+    }
+
+    products.forEach(product=>{
+
+        div.innerHTML+=`
+
+        <div class="card">
+
+            <h3>${product.name}</h3>
+
+            <p>${product.description}</p>
+
+            <p class="price">$${product.price}</p>
+
+            <p>Quantity: ${product.quantity}</p>
 
         </div>
 
@@ -145,7 +295,17 @@ function logout(){
 
 }
 
-loadProducts();
+const params=new URLSearchParams(window.location.search);
+
+if(params.get("view")==="my"){
+
+    loadMyProducts();
+
+}else{
+
+    loadStoreProducts();
+
+}
 
 </script>
 

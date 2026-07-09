@@ -28,10 +28,15 @@ def get_products(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user)
 ):
-    if current_user.role == "ADMIN":
-        return crud.get_all_products(db)
+    return crud.get_all_products(db)
 
-    return crud.get_my_products(db, current_user.id)
+
+@router.get("/store", response_model=list[ProductResponse])
+def get_store_products(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user)
+):
+    return crud.get_all_products(db)
 
 
 

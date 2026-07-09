@@ -27,6 +27,14 @@ ACCESS_TOKEN_EXPIRE_MINUTES = int(
 password_hash = PasswordHash.recommended()
 
 
+def credentials_exception() -> HTTPException:
+    return HTTPException(
+        status_code=401,
+        detail="Could not validate credentials",
+        headers={"WWW-Authenticate": "Bearer"}
+    )
+
+
 def hash_password(password: str) -> str:
     return password_hash.hash(password)
 
@@ -65,26 +73,17 @@ def get_current_user(
         email = payload.get("sub")
 
         if email is None:
-            raise HTTPException(
-                status_code=401,
-                detail="Invalid token"
-            )
+            raise credentials_exception()
 
     except jwt.PyJWTError:
-        raise HTTPException(
-            status_code=401,
-            detail="Invalid or expired token"
-        )
+        raise credentials_exception()
 
     user = db.query(User).filter(
         User.email == email
     ).first()
 
     if not user:
-        raise HTTPException(
-            status_code=401,
-            detail="User not found"
-        )
+        raise credentials_exception()
 
     return user
 
