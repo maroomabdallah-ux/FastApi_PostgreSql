@@ -52,7 +52,7 @@ def get_google_redirect_uri() -> str:
 def get_frontend_redirect_url() -> str:
     return os.getenv(
         "FRONTEND_REDIRECT_URL",
-        "http://127.0.0.1:5500/products.html?view=store"
+        "http://127.0.0.1:5500/frontend/products.html?view=store"
     )
 
 
